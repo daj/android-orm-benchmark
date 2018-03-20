@@ -17,24 +17,52 @@ import android.provider.BaseColumns;
 
 @Database(entities = {RoomMessage.class, RoomUser.class}, version = 1)
 public abstract class RoomDatabase extends android.arch.persistence.room.RoomDatabase {
-    private static volatile RoomDatabase sInstance;
+    private static volatile RoomDatabase sInMemoryInstance;
+    private static volatile RoomDatabase sDiskInstance;
 
-    public static synchronized RoomDatabase getInstance(Context context) {
+    public static synchronized RoomDatabase getInstance(Context context, boolean useInMemory) {
+        if (useInMemory) {
+            return getInMemoryInstance(context);
+        } else {
+            return getDiskInstance(context);
+        }
+    }
+
+    private static synchronized RoomDatabase getInMemoryInstance(Context context) {
         // DCL
-        if (sInstance == null) {
+        if (sInMemoryInstance == null) {
             synchronized (RoomDatabase.class) {
-                if (sInstance == null) {
-                    initInstance(context);
+                if (sInMemoryInstance == null) {
+                    initInMemory(context);
                 }
             }
         }
 
-        return sInstance;
+        return sInMemoryInstance;
     }
 
-    private static void initInstance(Context context) {
+    private static synchronized RoomDatabase getDiskInstance(Context context) {
+        // DCL
+        if (sDiskInstance == null) {
+            synchronized (RoomDatabase.class) {
+                if (sDiskInstance == null) {
+                    initDisk(context);
+                }
+            }
+        }
+        return sDiskInstance;
+    }
+
+    private static void initInMemory(Context context) {
         final Context appContext = context.getApplicationContext();
-        sInstance = Room.inMemoryDatabaseBuilder(appContext, RoomDatabase.class)
+        sInMemoryInstance = Room.inMemoryDatabaseBuilder(appContext, RoomDatabase.class)
+                .allowMainThreadQueries()
+                .build();
+    }
+
+    private static void initDisk(Context context) {
+        final Context appContext = context.getApplicationContext();
+        sInMemoryInstance = Room.databaseBuilder(appContext, RoomDatabase.class, "room")
                 .allowMainThreadQueries()
                 .build();
     }

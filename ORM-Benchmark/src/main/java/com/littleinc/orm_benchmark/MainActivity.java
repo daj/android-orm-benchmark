@@ -38,7 +38,7 @@ public class MainActivity extends FragmentActivity {
 
     private static final boolean USE_IN_MEMORY_DB = true;
 
-    private static final int NUM_ITERATIONS = 5;
+    private static final int NUM_ITERATIONS = 50;
 
     private int mCount = 0;
 
